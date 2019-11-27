@@ -1,50 +1,36 @@
 package com.qcloud.iot.mqtt;
 
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.MqttPingSender;
+import org.eclipse.paho.client.mqttv3.TimerPingSender;
 import org.eclipse.paho.client.mqttv3.internal.ClientComms;
 
 
 @Slf4j
-public class TXAlarmPingSender implements MqttPingSender {
-
-    public static final String TAG = "iot.TXAlarmPingSender";
-
-    private ClientComms mComms;
-
-    private TXAlarmPingSender that;
-
-    private volatile boolean hasStarted = false;
-
-    public TXAlarmPingSender() {
-        that = this;
-    }
+public class TXAlarmPingSender extends TimerPingSender {
+    private String clientId;
 
     @Override
     public void init(ClientComms comms) {
-        this.mComms = comms;
+        super.init(comms);
+        this.clientId = comms.getClient().getClientId();
     }
 
     @Override
     public void start() {
-        String action = TXMqttConstants.PING_SENDER + mComms.getClient().getClientId();
-        log.debug("Register alarmreceiver to Context " + action);
-        schedule(mComms.getKeepAlive());
-        hasStarted = true;
+        super.start();
+        log.debug("MQTT心跳启动,clientId=>{} ", clientId);
     }
 
     @Override
     public void stop() {
-        log.debug("Unregister alarmreceiver to Context " + mComms.getClient().getClientId());
-        if (hasStarted) {
-            hasStarted = false;
-        }
+        super.stop();
+        log.debug("MQTT心跳停止, clientId=>{} ", clientId);
+
     }
 
     @Override
     public void schedule(long delayInMilliseconds) {
-        long nextAlarmInMilliseconds = System.currentTimeMillis() + delayInMilliseconds;
-        log.debug("Schedule next alarm at " + nextAlarmInMilliseconds);
-        log.debug("Alarm scheule using setExactAndAllowWhileIdle, next: " + delayInMilliseconds);
+        super.schedule(delayInMilliseconds);
+        log.debug("MQTT心跳包发送完成，clientId=>{} ,下次心态包发送时间为=>{}ms后", clientId, delayInMilliseconds);
     }
 }

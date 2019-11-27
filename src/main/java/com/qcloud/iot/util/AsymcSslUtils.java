@@ -26,8 +26,6 @@ import java.util.Random;
 
 @Slf4j
 public class AsymcSslUtils {
-
-    public static final String TAG = "iot.AsymcSslUtils";
     private static String PASSWORD = String.valueOf(new Random(System.currentTimeMillis()).nextInt());
 
     /**
@@ -48,8 +46,6 @@ public class AsymcSslUtils {
         clientInputStream = AsymcSslUtils.class.getClassLoader().getResourceAsStream(clientCrtFileName);
         keyInputStream = AsymcSslUtils.class.getClassLoader().getResourceAsStream(clientPriKeyFileName);
         factory = getSocketFactoryByStream(clientInputStream, keyInputStream);
-        ;
-
         return factory;
     }
 

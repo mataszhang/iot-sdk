@@ -83,6 +83,7 @@ public class TXMqttLogImpl {
     class UploaderToServer extends Thread {
         @Override
         public void run() {
+            log.debug("上报日志线程启动");
 
             long nowCurrentMillis = System.currentTimeMillis();
 

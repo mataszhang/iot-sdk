@@ -468,7 +468,7 @@ public class TXGatewayConnection extends TXMqttConnection {
         }
 
         try {
-            log.info("Start connecting to %s", mServerURI);
+            log.info("Start connecting to {}", mServerURI);
             setConnectingState(TXMqttConstants.ConnectStatus.kConnecting);
             mMqttClient.connect(mConnOptions, userContext, mActionListener);
         } catch (Exception e) {

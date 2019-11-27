@@ -1,5 +1,7 @@
 package com.qcloud.iot.domain;
 
+import lombok.Data;
+
 import java.util.Map;
 
 /**
@@ -7,6 +9,7 @@ import java.util.Map;
  * @date 2019/11/20 11:07
  * @email mataszhang@163.com
  */
+@Data
 public class Attribute {
     private String access;
     private Map<String, String> contentInfo;
@@ -15,51 +18,12 @@ public class Attribute {
     private String name;
     private String value;
 
-    public String getAccess() {
-        return access;
+    public Attribute() {
+
     }
 
-    public void setAccess(String access) {
-        this.access = access;
-    }
-
-    public Map<String, String> getContentInfo() {
-        return contentInfo;
-    }
-
-    public void setContentInfo(Map<String, String> contentInfo) {
-        this.contentInfo = contentInfo;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
+    public Attribute(String index, String value) {
         this.index = index;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
         this.value = value;
     }
 }

@@ -40,16 +40,6 @@ public interface TXMqttConstants {
     }
 
     /**
-     * PingReq alarm action name
-     */
-    String PING_SENDER = TXAlarmPingSender.TAG + ".pingSender.";
-
-    /**
-     * Constant for wakelock
-     */
-    String PING_WAKELOCK = TXAlarmPingSender.TAG + ".client.";
-
-    /**
      * MQTT Command Type
      */
     int PUBLISH = 0;

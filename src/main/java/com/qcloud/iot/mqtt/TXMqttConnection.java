@@ -173,18 +173,18 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     public synchronized Status connect(MqttConnectOptions options, Object userContext) {
         if (mConnectStatus.equals(TXMqttConstants.ConnectStatus.kConnecting)) {
-            log.info(TAG, "The client is connecting. Connect return directly.");
+            log.info("The client is connecting. Connect return directly.");
             return Status.MQTT_CONNECT_IN_PROGRESS;
         }
 
         if (mConnectStatus.equals(TXMqttConstants.ConnectStatus.kConnected)) {
-            log.info(TAG, "The client is already connected. Connect return directly.");
+            log.info("The client is already connected. Connect return directly.");
             return Status.OK;
         }
 
         this.mConnOptions = options;
         if (mConnOptions == null) {
-            log.error(TAG, "Connect options == null, will not connect.");
+            log.error("Connect options == null, will not connect.");
             return Status.PARAMETER_INVALID;
         }
 
@@ -200,11 +200,11 @@ public class TXMqttConnection implements MqttCallbackExtended {
 
         if (mSecretKey != null && mSecretKey.length() != 0) {
             try {
-                log.debug(TAG, "secret is " + mSecretKey);
+                log.debug("secret is " + mSecretKey);
                 String passWordStr = HmacSha256.getSignature(userNameStr.getBytes(), Base64.decode(mSecretKey, Base64.DEFAULT)) + ";hmacsha256";
                 mConnOptions.setPassword(passWordStr.toCharArray());
             } catch (IllegalArgumentException e) {
-                log.debug(TAG, "Failed to set password");
+                log.debug("Failed to set password");
             }
         }
 
@@ -213,7 +213,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
         IMqttActionListener mActionListener = new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken token) {
-                log.info(TAG, "onSuccess!");
+                log.info("onSuccess!");
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnected);
                 mActionCallBack.onConnectCompleted(Status.OK, false, token.getUserContext(), "connected to " + mServerURI);
 
@@ -225,7 +225,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
 
             @Override
             public void onFailure(IMqttToken token, Throwable exception) {
-                log.error(TAG, exception, "onFailure!");
+                log.error(exception.getMessage(), exception);
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
                 mActionCallBack.onConnectCompleted(Status.ERROR, false, token.getUserContext(), exception.toString());
             }
@@ -239,18 +239,18 @@ public class TXMqttConnection implements MqttCallbackExtended {
                 mMqttClient.setBufferOpts(this.bufferOpts);
                 mMqttClient.setManualAcks(false);
             } catch (Exception e) {
-                log.error(TAG, "new MqttClient failed", e);
+                log.error("new MqttClient failed", e);
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
                 return Status.ERROR;
             }
         }
 
         try {
-            log.info(TAG, "Start connecting to %s", mServerURI);
+            log.info("Start connecting to {}", mServerURI);
             setConnectingState(TXMqttConstants.ConnectStatus.kConnecting);
             mMqttClient.connect(mConnOptions, userContext, mActionListener);
         } catch (Exception e) {
-            log.error(TAG, "MqttClient connect failed", e);
+            log.error("MqttClient connect failed", e);
             setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
             return Status.ERROR;
         }
@@ -265,22 +265,22 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     public synchronized Status reconnect() {
         if (mMqttClient == null) {
-            log.error(TAG, "Reconnect myClient = null. Will not do reconnect");
+            log.error("Reconnect myClient = null. Will not do reconnect");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Reconnect myClient = null. Will not do reconnect");
             return Status.MQTT_NO_CONN;
         }
 
         if (getConnectStatus().equals(TXMqttConstants.ConnectStatus.kConnecting)) {
-            log.info(TAG, "The client is connecting. Reconnect return directly.");
+            log.info("The client is connecting. Reconnect return directly.");
             return Status.MQTT_CONNECT_IN_PROGRESS;
         }
 
         if (mConnOptions.isAutomaticReconnect() && !getConnectStatus().equals(TXMqttConstants.ConnectStatus.kConnecting)) {
-            log.info(TAG, "Requesting Automatic reconnect using New Java AC");
+            log.info("Requesting Automatic reconnect using New Java AC");
             try {
                 mMqttClient.reconnect();
             } catch (Exception ex) {
-                log.error(TAG, "Exception occurred attempting to reconnect: ", ex);
+                log.error("Exception occurred attempting to reconnect: ", ex);
                 mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Exception occurred attempting to reconnect: ", ex);
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
                 return Status.ERROR;
@@ -289,14 +289,14 @@ public class TXMqttConnection implements MqttCallbackExtended {
             IMqttActionListener listener = new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    log.info(TAG, "onSuccess!");
+                    log.info("onSuccess!");
 
                     //mActionCallBack.onConnectCompleted(Status.OK, true, asyncActionToken.getUserContext(), "reconnected to " + mServerURI);
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    log.error(TAG, exception, "onFailure!");
+                    log.error(exception.getMessage(), exception);
                     mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "onFailure!");
                     setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
                     mActionCallBack.onConnectCompleted(Status.ERROR, true, asyncActionToken.getUserContext(), exception.toString());
@@ -307,7 +307,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                 mMqttClient.connect(mConnOptions, null, listener);
                 setConnectingState(TXMqttConstants.ConnectStatus.kDisconnected);
             } catch (Exception e) {
-                log.error(TAG, "Exception occurred attempting to reconnect: ", e);
+                log.error("Exception occurred attempting to reconnect: ", e);
                 mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Exception occurred attempting to reconnect: ", e);
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnectFailed);
                 return Status.ERROR;
@@ -362,7 +362,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                     mMqttClient.disconnect(timeout, userContext, mActionListener);
                 }
             } catch (MqttException e) {
-                log.error(TAG, e, "manual disconnect failed.");
+                log.error(e.getMessage(), e);
                 mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "manual disconnect failed.");
                 return Status.ERROR;
             }
@@ -383,37 +383,37 @@ public class TXMqttConnection implements MqttCallbackExtended {
         IMqttDeliveryToken sendToken = null;
 
         if (topic == null || topic.trim().length() == 0) {
-            log.error(TAG, "Topic is empty!!!");
+            log.error("Topic is empty!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic is empty!!!");
             return Status.PARAMETER_INVALID;
         }
         if (topic.length() > TXMqttConstants.MAX_SIZE_OF_CLOUD_TOPIC) {
-            log.error(TAG, "Topic length is too long!!!");
+            log.error("Topic length is too long!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic length is too long!!!");
             return Status.PARAMETER_INVALID;
         }
 
-        log.info(TAG, "Starting publish topic: %s Message: %s", topic, message.toString());
+        log.info("Starting publish topic: {} Message: {}", topic, message.toString());
 
         if ((mMqttClient != null) && (mMqttClient.isConnected())) {
             try {
                 sendToken = mMqttClient.publish(topic, message, userContext, new QcloudMqttActionListener(TXMqttConstants.PUBLISH));
             } catch (Exception e) {
-                log.error(TAG, e, "publish topic: %s failed.", topic);
-                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: %s failed.", topic);
+                log.error("publish topic: {} failed.", topic, e);
+                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: {} failed.", topic);
                 return Status.ERROR;
             }
         } else if ((mMqttClient != null) && (this.bufferOpts != null) && (this.bufferOpts.isBufferEnabled())) { //放入缓存
             try {
                 sendToken = mMqttClient.publish(topic, message, userContext, new QcloudMqttActionListener(TXMqttConstants.PUBLISH));
             } catch (Exception e) {
-                log.error(TAG, e, "publish topic: %s failed.", topic);
-                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: %s failed.", topic);
+                log.error("publish topic: {} failed.", topic, e);
+                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: {} failed.", topic);
                 return Status.ERROR;
             }
         } else {
-            log.error(TAG, "publish topic: %s failed, mMqttClient not connected and disconnect buffer not enough.", topic);
-            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: %s failed, mMqttClient not connected and disconnect buffer not enough.", topic);
+            log.error("publish topic: {} failed, mMqttClient not connected and disconnect buffer not enough.", topic);
+            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "publish topic: {} failed, mMqttClient not connected and disconnect buffer not enough.", topic);
             return Status.ERROR;
         }
 
@@ -430,29 +430,29 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     public Status subscribe(final String topic, final int qos, Object userContext) {
         if (topic == null || topic.trim().length() == 0) {
-            log.error(TAG, "Topic is empty!!!");
+            log.error("Topic is empty!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic is empty!!!");
             return Status.PARAMETER_INVALID;
         }
         if (topic.length() > TXMqttConstants.MAX_SIZE_OF_CLOUD_TOPIC) {
-            log.error(TAG, "Topic length is too long!!!");
+            log.error("Topic length is too long!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic length is too long!!!");
             return Status.PARAMETER_INVALID;
         }
 
-        log.info(TAG, "Starting subscribe topic: %s", topic);
+        log.info("Starting subscribe topic: {}", topic);
 
         if ((mMqttClient != null) && (mMqttClient.isConnected())) {
             try {
                 mMqttClient.subscribe(topic, qos, userContext, new QcloudMqttActionListener(TXMqttConstants.SUBSCRIBE));
             } catch (Exception e) {
-                log.error(TAG, e, "subscribe topic: %s failed.", topic);
-                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe topic: %s failed.", topic);
+                log.error("subscribe topic: {} failed.", topic, e);
+                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe topic: {} failed.", topic);
                 return Status.ERROR;
             }
         } else {
-            log.error(TAG, "subscribe topic: %s failed, because mMqttClient not connected.", topic);
-            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe topic: %s failed, because mMqttClient not connected.", topic);
+            log.error("subscribe topic: {} failed, because mMqttClient not connected.", topic);
+            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe topic: {} failed, because mMqttClient not connected.", topic);
             return Status.MQTT_NO_CONN;
         }
 
@@ -470,29 +470,29 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     public Status unSubscribe(final String topic, Object userContext) {
         if (topic == null || topic.trim().length() == 0) {
-            log.error(TAG, "Topic is empty!!!");
+            log.error("Topic is empty!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic is empty!!!");
             return Status.PARAMETER_INVALID;
         }
         if (topic.length() > TXMqttConstants.MAX_SIZE_OF_CLOUD_TOPIC) {
-            log.error(TAG, "Topic length is too long!!!");
+            log.error("Topic length is too long!!!");
             mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Topic length is too long!!!");
             return Status.PARAMETER_INVALID;
         }
 
-        log.info(TAG, "Starting unSubscribe topic: %s", topic);
+        log.info("Starting unSubscribe topic: {}", topic);
 
         if ((mMqttClient != null) && (mMqttClient.isConnected())) {
             try {
                 mMqttClient.unsubscribe(topic, userContext, new QcloudMqttActionListener(TXMqttConstants.UNSUBSCRIBE));
             } catch (Exception e) {
-                log.error(TAG, e, "unSubscribe topic: %s failed.", topic);
-                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "unSubscribe topic: %s failed.", topic);
+                log.error("unSubscribe topic:  {} failed.", topic, e);
+                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "unSubscribe topic: {} failed.", topic);
                 return Status.ERROR;
             }
         } else {
-            log.error(TAG, "unSubscribe topic: %s failed, because mMqttClient not connected.", topic);
-            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "unSubscribe topic: %s failed, because mMqttClient not connected.", topic);
+            log.error("unSubscribe topic: {} failed, because mMqttClient not connected.", topic);
+            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "unSubscribe topic: {} failed, because mMqttClient not connected.", topic);
             return Status.MQTT_NO_CONN;
         }
 
@@ -573,7 +573,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
     public void mLog(int logLevel, final String tag, final String format, final Object... obj) {
         if (mMqttLog != null) {
             if (!(mMqttLog.saveMqttLog(logLevel, tag, format, obj))) {
-                log.warn(tag, "Save %s Level Log failed!", TXMqttLog.level_str[logLevel]);
+                log.warn(tag, "Save {} Level Log failed!", TXMqttLog.level_str[logLevel]);
             }
         }
     }
@@ -581,7 +581,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
     public void mLog(int logLevel, final String tag, final String msg) {
         if (mMqttLog != null) {
             if (!(mMqttLog.saveMqttLog(logLevel, tag, msg))) {
-                log.warn(tag, "Save %s Level Log failed!", TXMqttLog.level_str[logLevel]);
+                log.warn(tag, "Save {} Level Log failed!", TXMqttLog.level_str[logLevel]);
             }
         }
     }
@@ -613,7 +613,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
 
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
-        log.info(TAG, "connectComplete. reconnect flag is " + reconnect);
+        log.info("connectComplete. reconnect flag is " + reconnect);
         setConnectingState(TXMqttConstants.ConnectStatus.kConnected);
 
         if (!reconnect) {
@@ -625,11 +625,11 @@ public class TXMqttConnection implements MqttCallbackExtended {
             String topic = it.next();
             Integer qos = mSubscribedTopicMap.get(topic);
             try {
-                log.info(TAG, "subscribe to %s...", topic);
+                log.info("subscribe to {}...", topic);
                 mMqttClient.subscribe(topic, qos, null, new QcloudMqttActionListener(TXMqttConstants.SUBSCRIBE));
             } catch (Exception e) {
-                log.error(TAG, "subscribe to %s failed.", topic);
-                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe to %s failed.", topic);
+                log.error("subscribe to {} failed.", topic);
+                mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "subscribe to {} failed.", topic);
             }
         }
 
@@ -648,8 +648,8 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     @Override
     public void connectionLost(Throwable cause) {
-        log.error(TAG, "connection lost because of: %s", cause.toString());
-        mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "connection lost because of: %s", cause.toString());
+        log.error("connection lost because of: {}", cause.toString(), cause);
+        mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "connection lost because of: {}", cause.toString());
         setConnectingState(TXMqttConstants.ConnectStatus.kDisconnected);
 
         mActionCallBack.onConnectionLost(cause);
@@ -671,12 +671,12 @@ public class TXMqttConnection implements MqttCallbackExtended {
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         if (message.getQos() > 0 && message.getId() == mLastReceivedMessageId) {
-            log.error(TAG, "Received topic: %s, id: %d, message: %s, discard repeated message!!!", topic, message.getId(), message);
-            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Received topic: %s, id: %d, message: %s, discard repeated message!!!", topic, message.getId(), message);
+            log.error("Received topic: {}, id: %d, message: {}, discard repeated message!!!", topic, message.getId(), message);
+            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Received topic: {}, id: %d, message: {}, discard repeated message!!!", topic, message.getId(), message);
             return;
         }
 
-        log.info(TAG, "Received topic: %s, id: %d, message: %s", topic, message.getId(), message);
+        log.info("Received topic: {}, id: %d, message: {}", topic, message.getId(), message);
 
         mLastReceivedMessageId = message.getId();
 
@@ -703,7 +703,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                         int logLevel = jsonObj.getInt(TXMqttLogConstants.LOG_LEVEL);
                         mMqttLog.setMqttLogLevel(logLevel);
                         uploadLog();
-                        log.debug(TAG, "******Set mqttLogLevel to " + logLevel);
+                        log.debug("******Set mqttLogLevel to " + logLevel);
                         return;
                     }
 
@@ -711,7 +711,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                     e.printStackTrace();
                 }
             }
-            log.debug(TAG, "******Get mqttLogLevel failed ");
+            log.debug("******Get mqttLogLevel failed ");
         }
     }
 
@@ -722,7 +722,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
      */
     @Override
     public void deliveryComplete(IMqttDeliveryToken messageToken) {
-        log.info(TAG, "deliveryComplete, token.getMessageId:" + messageToken.getMessageId());
+        log.info("deliveryComplete, token.getMessageId:" + messageToken.getMessageId());
     }
 
     /**
@@ -787,7 +787,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                     break;
 
                 default:
-                    log.error(TAG, "Unknown message on Success:" + token);
+                    log.error("Unknown message on Success:" + token);
                     mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Unknown message on Success:" + token);
                     break;
             }
@@ -806,7 +806,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
                     mActionCallBack.onUnSubscribeCompleted(Status.ERROR, token, token.getUserContext(), exception.toString());
                     break;
                 default:
-                    log.error(TAG, "Unknown message on onFailure:" + token);
+                    log.error("Unknown message on onFailure:" + token);
                     mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Unknown message on onFailure:" + token);
                     break;
             }

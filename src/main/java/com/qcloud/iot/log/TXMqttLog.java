@@ -129,7 +129,7 @@ public class TXMqttLog {
             documentJSONObj.put(TXMqttLogConstants.TYPE, TXMqttLogConstants.GET_LOG_LEVEL);
             documentJSONObj.put(TXMqttLogConstants.CLIENT_TOKEN, clientToken);
         } catch (JSONException e) {
-            log.error(TAG, e, "build report info failed");
+            log.error("build report info failed", e);
             return "";
         }
 
