@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TXMqttConnectionTest extends TestCase {
 
+    @Test
     public void testConnect() throws InterruptedException {
         String serverURI = "ssl://iotcloud-mqtt.gz.tencentdevices.com:8883";
         String productId = "1M8L1A6TIF";
