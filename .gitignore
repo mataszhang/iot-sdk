@@ -12,3 +12,4 @@ gen
 /.idea/
 */.idea/
 */*.iml
+*.log

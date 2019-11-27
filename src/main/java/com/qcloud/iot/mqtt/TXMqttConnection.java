@@ -620,6 +620,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
             return;
         }
 
+        //如果是重连的，恢复前面已订阅的主题
         Iterator<String> it = mSubscribedTopicMap.keySet().iterator();
         while (it.hasNext()) {
             String topic = it.next();
@@ -633,6 +634,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
             }
         }
 
+        // 调用TXMqttActionCallBack
         mActionCallBack.onConnectCompleted(Status.OK, reconnect, null, "connected to " + serverURI);
 
         //重新连接，处理离线日志，重新获取日志级别
@@ -671,12 +673,12 @@ public class TXMqttConnection implements MqttCallbackExtended {
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         if (message.getQos() > 0 && message.getId() == mLastReceivedMessageId) {
-            log.error("Received topic: {}, id: %d, message: {}, discard repeated message!!!", topic, message.getId(), message);
-            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Received topic: {}, id: %d, message: {}, discard repeated message!!!", topic, message.getId(), message);
+            log.error("Received topic: {}, id: {}, message: {}, discard repeated message!!!", topic, message.getId(), message);
+            mLog(TXMqttLogConstants.LEVEL_FATAL, TAG, "Received topic: {}, id: {}, message: {}, discard repeated message!!!", topic, message.getId(), message);
             return;
         }
 
-        log.info("Received topic: {}, id: %d, message: {}", topic, message.getId(), message);
+        log.info("Received topic: {}, id: {}, message: {}", topic, message.getId(), message);
 
         mLastReceivedMessageId = message.getId();
 

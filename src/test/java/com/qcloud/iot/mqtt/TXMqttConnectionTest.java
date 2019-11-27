@@ -7,12 +7,9 @@ import com.qcloud.iot.domain.Attribute;
 import com.qcloud.iot.domain.Device;
 import com.qcloud.iot.domain.GateWayMsg;
 import com.qcloud.iot.util.AsymcSslUtils;
-import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
-import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -20,16 +17,18 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class TXMqttConnectionTest extends TestCase {
+public class TXMqttConnectionTest extends TXMqttActionCallBack {
+    String serverURI = "ssl://iotcloud-mqtt.gz.tencentdevices.com:8883";
+    String productId = "1M8L1A6TIF";
+    String deviceName = "dev-4zpWoUJx";
+    String psk = "SLeVt77zcA0zvrAMMji9uQ==";
+    String pubTopic = String.format("%s/%s/%s", productId, deviceName, "event");
+    String subTopic = String.format("%s/%s/%s", productId, deviceName, "control");
 
-    @Test
-    public void testConnect() throws InterruptedException {
-        String serverURI = "ssl://iotcloud-mqtt.gz.tencentdevices.com:8883";
-        String productId = "1M8L1A6TIF";
-        String deviceName = "dev-4zpWoUJx";
-        String psk = "SLeVt77zcA0zvrAMMji9uQ==";
-        String topic = String.format("%s/%s/%s", productId, deviceName, "event");
+    private TXMqttConnection connection = null;
 
+    @Before
+    public void init() {
         //断线后消息缓存
         DisconnectedBufferOptions bufferOptions = new DisconnectedBufferOptions();
         bufferOptions.setBufferEnabled(true);
@@ -37,7 +36,7 @@ public class TXMqttConnectionTest extends TestCase {
         bufferOptions.setDeleteOldestMessages(true);
 
         //连接对象
-        TXMqttConnection connection = new TXMqttConnection(serverURI, productId, deviceName, psk, bufferOptions, null, new TestCallBack());
+        connection = new TXMqttConnection(serverURI, productId, deviceName, psk, bufferOptions, null, this);
 
         //连接参数选项
         MqttConnectOptions options = new MqttConnectOptions();
@@ -46,8 +45,11 @@ public class TXMqttConnectionTest extends TestCase {
         options.setAutomaticReconnect(true);
         options.setSocketFactory(AsymcSslUtils.getSocketFactory());
         connection.connect(options, null);
+    }
 
 
+    @Test
+    public void testConnect() throws InterruptedException {
         //检测mqtt链接状态
         new Thread(() -> {
             while (true) {
@@ -93,7 +95,7 @@ public class TXMqttConnectionTest extends TestCase {
                 mqttMessage.setQos(TXMqttConstants.QOS1);
 
                 if (connection.getConnectStatus().equals(TXMqttConstants.ConnectStatus.kConnected)) {
-                    connection.publish(topic, mqttMessage, null);
+                    connection.publish(pubTopic, mqttMessage, null);
                 }
 
                 try {
@@ -106,21 +108,44 @@ public class TXMqttConnectionTest extends TestCase {
         Thread.currentThread().join();
     }
 
-    private static class TestCallBack extends TXMqttActionCallBack {
 
-        @Override
-        public void onConnectCompleted(Status status, boolean reconnect, Object userContext, String msg) {
-            log.info("mqtt链接成功, status=>{}, 是否重连=>{}, msg=>{}", status, reconnect, msg);
-        }
+    @Override
+    public void onMessageReceived(String topic, MqttMessage message) {
+        log.info("收到topic=>{}的消息=>{}", topic, new String(message.getPayload()));
+    }
 
-        @Override
-        public void onConnectionLost(Throwable cause) {
-            log.info("mqtt链接断开");
-        }
+    /**
+     * @param status
+     * @param reconnect
+     * @param userContext
+     * @param msg
+     * @return
+     * @author matas
+     * @date 2019/11/27 22:35
+     * @see TXMqttConnection#connectComplete(boolean, java.lang.String)
+     */
+    @Override
+    public void onConnectCompleted(Status status, boolean reconnect, Object userContext, String msg) {
+        log.info("mqtt链接成功, status=>{}, 是否重连=>{}, msg=>{}", status, reconnect, msg);
 
-        @Override
-        public void onDisconnectCompleted(Status status, Object userContext, String msg) {
+        //mqtt首次连接成功以后，订阅主题
+        if (!reconnect && Status.OK.equals(status)) {
+            connection.subscribe(subTopic, TXMqttConstants.QOS1, null);
         }
     }
 
+    @Override
+    public void onConnectionLost(Throwable cause) {
+        log.info("mqtt链接断开");
+    }
+
+    @Override
+    public void onDisconnectCompleted(Status status, Object userContext, String msg) {
+    }
+
+    @Override
+    public void onSubscribeCompleted(Status status, IMqttToken token, Object userContext, String msg) {
+
+        log.info("订阅主题完成，status=>{}, topics=>{} , msg=>{}", status, token.getTopics(), msg);
+    }
 }
