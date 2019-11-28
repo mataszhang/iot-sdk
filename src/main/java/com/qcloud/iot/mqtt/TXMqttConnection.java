@@ -215,7 +215,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
             public void onSuccess(IMqttToken token) {
                 log.info("onSuccess!");
                 setConnectingState(TXMqttConstants.ConnectStatus.kConnected);
-                mActionCallBack.onConnectCompleted(Status.OK, false, token.getUserContext(), "connected to " + mServerURI);
+                mActionCallBack.onConnectCompleted(Status.OK, false, TXMqttConnection.this, "connected to " + mServerURI);
 
                 // 连接建立后，如果需要日志，则初始化日志功能
                 if (mMqttLogFlag) {
@@ -635,7 +635,7 @@ public class TXMqttConnection implements MqttCallbackExtended {
         }
 
         // 调用TXMqttActionCallBack
-        mActionCallBack.onConnectCompleted(Status.OK, reconnect, null, "connected to " + serverURI);
+        mActionCallBack.onConnectCompleted(Status.OK, reconnect, TXMqttConnection.this, "connected to " + serverURI);
 
         //重新连接，处理离线日志，重新获取日志级别
         if (mMqttLogFlag) {

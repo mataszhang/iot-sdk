@@ -130,7 +130,12 @@ public class TXMqttConnectionTest extends TXMqttActionCallBack {
 
         //mqtt首次连接成功以后，订阅主题
         if (!reconnect && Status.OK.equals(status)) {
-            connection.subscribe(subTopic, TXMqttConstants.QOS1, null);
+            log.info(userContext.toString());
+            if (null != userContext && userContext instanceof TXMqttConnection) {
+                TXMqttConnection conn = (TXMqttConnection) userContext;
+                conn.subscribe(subTopic, TXMqttConstants.QOS1, null);
+            }
+
         }
     }
 
@@ -145,7 +150,6 @@ public class TXMqttConnectionTest extends TXMqttActionCallBack {
 
     @Override
     public void onSubscribeCompleted(Status status, IMqttToken token, Object userContext, String msg) {
-
         log.info("订阅主题完成，status=>{}, topics=>{} , msg=>{}", status, token.getTopics(), msg);
     }
 }
