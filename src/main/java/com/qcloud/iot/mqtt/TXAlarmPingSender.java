@@ -31,6 +31,6 @@ public class TXAlarmPingSender extends TimerPingSender {
     @Override
     public void schedule(long delayInMilliseconds) {
         super.schedule(delayInMilliseconds);
-        log.debug("MQTT心跳包发送完成，clientId=>{} ,下次心态包发送时间为=>{}ms后", clientId, delayInMilliseconds);
+        log.debug("MQTT心跳包发送完成，clientId=>{} ,下次心跳包发送时间为=>{}ms后", clientId, delayInMilliseconds);
     }
 }
